@@ -1,1 +1,10 @@
 
+[
+  {
+    "id": 1,
+    "username": "مروان البدري",
+    "password": "$2b$12$N1oy7fPBwLuYxMr4l7tuY.QuiHaQ9EUqMglC2c.Zi6pl6.R0jMC/e",
+    "role": "admin",
+    "profile_pic": "https://res.cloudinary.com/djlyxjsnv/image/upload/v1790711961/ahazmogl0uefptehlg9h.png",
+    "cover_pic": null
+  }
