@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% set is_own = is_own|default(true) %}
+
+{% block title %}{{ 'ملفي الشخصي' if is_own else username }}{% endblock %}
+
+{% block content %}
+{% set default_pic = url_for('static', filename='default-avatar.svg') %}
+{% set is_admin = role == "admin" %}
+
+<section class="glass profile">
+    <div class="cover-wrap">
+        <div class="cover"{% if cover_pic %} style="background-image: url('{{ cover_pic }}')"{% endif %}></div>
+
+        {% if is_own %}
+        <form class="profile-pic-wrap" id="picForm" method="POST"
+              action="{{ url_for('change_picture') }}" enctype="multipart/form-data">
+            <img class="profile-pic" src="{{ profile_pic or default_pic }}" alt="صورة {{ username }}">
+            <button class="pic-edit-btn" id="picBtn" type="button" aria-label="تغيير الصورة الشخصية">
+                {{ icon('pencil', 28) }}
+            </button>
+            <input type="file" id="picInput" name="profile_pic" accept="image/*" hidden>
+        </form>
+        {% elif profile_pic %}
+        <a href="{{ profile_pic }}" target="_blank" rel="noopener noreferrer" aria-label="عرض الصورة كاملة">
+            <img class="profile-pic" src="{{ profile_pic }}" alt="صورة {{ username }}">
+        </a>
+        {% else %}
+        <img class="profile-pic" src="{{ default_pic }}" alt="صورة {{ username }}">
+        {% endif %}
+    </div>
+
+    <div class="profile-body">
+        <h1>
+            {{ username }}
+            <span class="role-badge">
+                {{ icon('crown' if is_admin else 'graduation-cap', 16) }}
+                {{ 'أدمن' if is_admin else 'طالب' }}
+            </span>
+        </h1>
+
+        <div class="profile-stats">
+            <div class="glass stat"><b>{{ my_reviews }}</b><span>{{ 'تقييم رفعته' if is_own else 'تقييم رفعه' }}</span></div>
+            <div class="glass stat"><b>{{ my_homeworks }}</b><span>{{ 'واجب رفعته' if is_own else 'واجب رفعه' }}</span></div>
+            <div class="glass stat"><b>{{ my_reviews + my_homeworks }}</b><span>{{ 'إجمالي مساهماتك' if is_own else 'إجمالي مساهماته' }}</span></div>
+        </div>
+
+        <div class="profile-actions">
+            {% if is_own %}
+            <a class="btn btn-primary" href="{{ url_for('upload_review') }}">{{ icon('plus', 18) }} رفع تقييم</a>
+            <a class="btn btn-success" href="{{ url_for('upload_homework') }}">{{ icon('plus', 18) }} رفع واجب</a>
+            <a class="btn btn-ghost" href="{{ url_for('logout') }}">{{ icon('log-out', 18) }} تسجيل الخروج</a>
+            {% else %}
+            <a class="btn btn-ghost" href="{{ url_for('home') }}">{{ icon('home', 18) }} رجوع للرئيسية</a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+{% if is_own %}
+<script>
+    (function () {
+        var form = document.getElementById("picForm");
+        var input = document.getElementById("picInput");
+        var img = form.querySelector(".profile-pic");
+
+        document.getElementById("picBtn").addEventListener("click", function () { input.click(); });
+
+        input.addEventListener("change", function () {
+            var file = input.files[0];
+            if (!file) return;
+            if (file.size > 8 * 1024 * 1024) {
+                input.value = "";
+                alert("الصورة كبيرة، اختار صورة أقل من 8 ميجا.");
+                return;
+            }
+            img.src = URL.createObjectURL(file);   // معاينة فورية لحد ما الرفع يخلص
+            form.classList.add("uploading");
+            form.submit();
+        });
+
+        // لو رجع بزرار الرجوع، نبدأ من جديد بدل ما تفضل الصورة في حالة الرفع
+        window.addEventListener("pageshow", function (e) { if (e.persisted) location.reload(); });
+    })();
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>تسجيل حساب</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<main class="auth-wrap">
+    <section class="glass auth-card">
+        <div class="auth-logo">{{ icon('user-plus', 52) }}</div>
+        <h1>تسجيل حساب</h1>
+        <p class="sub">اعمل حسابك وانضم لزمايلك في مجتمع المذاكرة.</p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}" role="alert">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <form action="{{ url_for('register') }}" method="POST" enctype="multipart/form-data" id="registerForm">
+            <div class="field">
+                <label for="username">اسم المستخدم</label>
+                <input type="text" name="username" id="username" autocomplete="username" autofocus required>
+            </div>
+
+            <div class="field">
+                <label for="password">كلمة المرور</label>
+                <input type="password" name="password" id="password" autocomplete="new-password" required>
+            </div>
+
+            <div class="field">
+                <label for="profile_pic">صورة الملف الشخصي <span class="optional">اختياري</span></label>
+                <input type="file" name="profile_pic" id="profile_pic" accept="image/*">
+            </div>
+
+            <div class="field">
+                <label for="cover_pic">صورة الغلاف <span class="optional">اختياري</span></label>
+                <input type="file" name="cover_pic" id="cover_pic" accept="image/*">
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" id="registerBtn">{{ icon('user-plus', 18) }} إنشاء الحساب</button>
+        </form>
+
+        <p class="auth-switch">عندك حساب؟ <a href="{{ url_for('login') }}">سجّل دخولك</a></p>
+    </section>
+</main>
+
+<script>
+    // رفع الصور ممكن ياخد ثواني، فبنمنع الضغط المتكرر على الزرار
+    document.getElementById("registerForm").addEventListener("submit", function () {
+        var btn = document.getElementById("registerBtn");
+        btn.disabled = true;
+        btn.lastChild.textContent = " بيتم إنشاء الحساب...";
+    });
+    // لو رجع بزرار الرجوع، الصفحة تتحمل من جديد بدل ما الزرار يفضل مقفول
+    window.addEventListener("pageshow", function (e) { if (e.persisted) location.reload(); });
+</script>
+</body>
+</html>

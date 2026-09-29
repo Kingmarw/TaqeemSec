@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}الرئيسية{% endblock %} | تقييماتي</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="navbar">
+        <div class="navbar-inner">
+            <a href="{{ url_for('home') }}" class="brand">{{ icon('graduation-cap', 26) }}<span class="txt">1\4</span></a>
+            <button class="menu-toggle" id="menuToggle" aria-label="القائمة">{{ icon('menu', 22) }}</button>
+            <nav class="nav" id="nav">
+                <a href="{{ url_for('home') }}" class="link {{ 'active' if request.path == '/' }}">{{ icon('home', 18) }} الرئيسية</a>
+                <a href="{{ url_for('view_reviews') }}" class="link {{ 'active' if request.path == '/eva' }}">{{ icon('file-text', 18) }} التقييمات</a>
+                <a href="{{ url_for('view_homeworks') }}" class="link {{ 'active' if request.path == '/homeworks' }}">{{ icon('clipboard-list', 18) }} الواجبات</a>
+                <a href="{{ url_for('community') }}" class="link {{ 'active' if request.path.startswith('/community') }}">{{ icon('users', 18) }} المجتمع</a>
+                <span class="divider"></span>
+                <a href="{{ url_for('upload_review') }}" class="link {{ 'active' if request.path == '/upload_eva' }}">{{ icon('plus', 18) }} رفع تقييم</a>
+                <a href="{{ url_for('upload_homework') }}" class="link {{ 'active' if request.path == '/upload_homework' }}">{{ icon('plus', 18) }} رفع واجب</a>
+                <span class="divider"></span>
+                <a href="{{ url_for('profile') }}" class="avatar-link" title="{{ current_user.username }}">
+                    <img class="avatar" src="{{ current_user.profile_pic or url_for('static', filename='default-avatar.svg') }}" alt="الملف الشخصي">
+                </a>
+                <a href="{{ url_for('logout') }}" class="link">{{ icon('log-out', 18) }} خروج</a>
+            </nav>
+        </div>
+    </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="alerts">
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    {% endwith %}
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">روح اكتب التقييم اللي عليك ربنا يهديك&mdash; 1/4</footer>
+
+    <div class="sound-widget" id="soundWidget" hidden>
+        <div class="glass sound-panel" id="soundPanel" hidden>
+            <div class="switch-row">
+                <span id="fxLabel">{{ icon('volume-2', 16) }} أصوات الأزرار</span>
+                <button class="switch" id="fxSwitch" type="button" role="switch" aria-checked="true" aria-labelledby="fxLabel" data-sfx="none"></button>
+            </div>
+            <label class="vol-row">مستوى الصوت
+                <input type="range" id="volRange" min="0" max="100" value="40">
+            </label>
+        </div>
+        <button class="glass sound-fab" id="soundFab" type="button" aria-expanded="false" aria-controls="soundPanel" aria-label="إعدادات الصوت" data-sfx="none">
+            <span class="ic-on">{{ icon('volume-2', 22) }}</span><span class="ic-off">{{ icon('volume-x', 22) }}</span>
+        </button>
+    </div>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tone@14.7.77/build/Tone.js" crossorigin="anonymous" defer></script>
+    <script src="{{ url_for('static', filename='sound.js') }}" defer></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}المجتمع{% endblock %}
+
+{% block content %}
+{% set is_admin = current_user.role == "admin" %}
+{% set default_pic = url_for('static', filename='default-avatar.svg') %}
+
+<div class="page-head">
+    <div>
+        <h1>{{ icon('users', 34) }} <span class="grad-text">المجتمع</span></h1>
+        <p class="muted">اسأل، اشرح، وشارك زمايلك اللي عرفته.</p>
+    </div>
+</div>
+
+<form class="glass new-post" action="{{ url_for('community_post') }}" method="POST">
+    <textarea name="body" rows="3" maxlength="{{ post_max }}" placeholder="عندك سؤال أو معلومة تفيد زمايلك؟" aria-label="مشاركة جديدة" required></textarea>
+    <div class="new-post-bar">
+        <select name="post_subject" aria-label="المادة">
+            <option value="">عام (من غير مادة)</option>
+            {% for s in SUBJECTS %}
+            <option value="{{ s.name }}">{{ s.name }}</option>
+            {% endfor %}
+        </select>
+        <button class="btn btn-primary" type="submit">{{ icon('send', 18) }} انشر</button>
+    </div>
+</form>
+
+<div class="chips" style="margin: 24px 0">
+    <a class="chip {{ 'active' if not current_subject }}" href="{{ url_for('community') }}">الكل</a>
+    {% for s in SUBJECTS %}
+    <a class="chip {{ 'active' if current_subject == s.name }}" href="{{ url_for('community', subject=s.name) }}">{{ icon(s.icon, 16) }} {{ s.name }}</a>
+    {% endfor %}
+</div>
+
+{% for p in posts %}
+<article class="glass post" id="post-{{ p.id }}">
+    <header class="post-head">
+        <img class="post-avatar" src="{{ p.author_pic or default_pic }}" alt="">
+        <div class="post-who">
+            <strong>{{ p.author }}</strong>
+            <span class="muted">{{ p.ago }}</span>
+        </div>
+        {% if is_admin and p.reports %}<span class="mod-badge">{{ p.reports }} بلاغ</span>{% endif %}
+        {% if p.subject %}
+        <span class="tag">{{ icon(SUBJECT_ICONS.get(p.subject, 'book'), 14) }} {{ p.subject }}</span>
+        {% endif %}
+    </header>
+
+    <p class="post-body">{{ p.body }}</p>
+
+    <div class="post-actions">
+        <form action="{{ url_for('community_like', post_id=p.id) }}" method="POST">
+            <input type="hidden" name="subject" value="{{ current_subject or '' }}">
+            <button class="btn btn-ghost btn-sm like {{ 'liked' if p.liked }}" type="submit" aria-pressed="{{ 'true' if p.liked else 'false' }}">
+                {{ icon('heart', 16) }} {{ p.likes }}
+            </button>
+        </form>
+
+        {% if p.user_id != current_user.id %}
+        <form action="{{ url_for('community_report', kind='post', target_id=p.id) }}" method="POST"
+              onsubmit="return confirm('تبلّغ عن المشاركة دي؟');">
+            <input type="hidden" name="post_id" value="{{ p.id }}">
+            <input type="hidden" name="subject" value="{{ current_subject or '' }}">
+            <button class="btn btn-ghost btn-sm" type="submit">{{ icon('flag', 16) }} إبلاغ</button>
+        </form>
+        {% endif %}
+
+        {% if p.user_id == current_user.id or is_admin %}
+        <form action="{{ url_for('community_delete_post', post_id=p.id) }}" method="POST"
+              onsubmit="return confirm('متأكد إنك عايز تحذف المشاركة دي؟');">
+            <input type="hidden" name="subject" value="{{ current_subject or '' }}">
+            <button class="btn btn-danger btn-sm" type="submit">{{ icon('trash', 16) }} حذف</button>
+        </form>
+        {% endif %}
+    </div>
+
+    <details class="comments" {% if open_id == p.id %}open{% endif %}>
+        <summary>{{ icon('message-square', 16) }} {{ p.comments|length }} تعليق</summary>
+
+        {% for c in p.comments %}
+        <div class="comment" id="comment-{{ c.id }}">
+            <img class="comment-avatar" src="{{ c.author_pic or default_pic }}" alt="">
+            <div class="comment-main">
+                <div>
+                    <strong>{{ c.author }}</strong>
+                    <span class="muted">{{ c.ago }}</span>
+                    {% if is_admin and c.reports %}<span class="mod-badge">{{ c.reports }} بلاغ</span>{% endif %}
+                </div>
+                <p>{{ c.body }}</p>
+            </div>
+            <div class="comment-tools">
+                {% if c.user_id != current_user.id %}
+                <form action="{{ url_for('community_report', kind='comment', target_id=c.id) }}" method="POST"
+                      onsubmit="return confirm('تبلّغ عن التعليق ده؟');">
+                    <input type="hidden" name="post_id" value="{{ p.id }}">
+                    <input type="hidden" name="subject" value="{{ current_subject or '' }}">
+                    <button class="icon-btn" type="submit" title="إبلاغ" aria-label="إبلاغ عن التعليق">{{ icon('flag', 15) }}</button>
+                </form>
+                {% endif %}
+                {% if c.user_id == current_user.id or is_admin %}
+                <form action="{{ url_for('community_delete_comment', comment_id=c.id) }}" method="POST"
+                      onsubmit="return confirm('حذف التعليق؟');">
+                    <input type="hidden" name="subject" value="{{ current_subject or '' }}">
+                    <button class="icon-btn" type="submit" title="حذف" aria-label="حذف التعليق">{{ icon('trash', 15) }}</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+
+        <form class="comment-form" action="{{ url_for('community_comment', post_id=p.id) }}" method="POST">
+            <input type="hidden" name="subject" value="{{ current_subject or '' }}">
+            <input type="text" name="body" maxlength="{{ comment_max }}" placeholder="اكتب تعليق..." aria-label="تعليق" required>
+            <button class="btn btn-primary btn-sm" type="submit" aria-label="إرسال التعليق">{{ icon('send', 16) }}</button>
+        </form>
+    </details>
+</article>
+{% else %}
+<div class="glass empty">
+    <div class="big">{{ icon('message-square', 56) }}</div>
+    <h3>لسه مفيش مشاركات</h3>
+    <p>اكتب أول مشاركة فوق وابدأ النقاش مع زمايلك.</p>
+</div>
+{% endfor %}
+
+<script>
+    (function () {
+        var SOUND_URL = "https://res.cloudinary.com/ddzvcwo9v/video/upload/v1790721597/Recording_Victor_-_Deep_Malevolent_and_Ancient_gen_pLBtKd_z1kn20.wav";
+        var VOLUME = 0.6; // من 0 لـ 1
+
+        // بنشغله بس لما الطالب يدخل من صفحة تانية، مش مع كل لايك أو تعليق أو ريفريش
+        var nav = performance.getEntriesByType("navigation")[0];
+        if (nav && nav.type !== "navigate") return;
+
+        try {
+            var ref = new URL(document.referrer);
+            if (ref.origin === location.origin && ref.pathname.indexOf("/community") === 0) return;
+        } catch (e) { /* مفيش referrer: دخول مباشر */ }
+
+        var audio = new Audio(SOUND_URL);
+        audio.preload = "auto";
+        audio.volume = VOLUME;
+
+        var played = audio.play();
+        if (played && played.catch) {
+            // المتصفح ممكن يمنع الصوت التلقائي: نشغله عند أول لمسة أو ضغطة
+            played.catch(function () {
+                var once = function () {
+                    audio.play().catch(function () {});
+                    document.removeEventListener("pointerdown", once);
+                    document.removeEventListener("keydown", once);
+                };
+                document.addEventListener("pointerdown", once);
+                document.addEventListener("keydown", once);
+            });
+        }
+    })();
+</script>
+
+{% endblock %}
+

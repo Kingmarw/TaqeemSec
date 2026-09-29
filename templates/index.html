@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}الرئيسية{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <span class="badge">{{ icon('book-open', 16) }} مجتمع المذاكرة</span>
+    <h1>أهلًا يا <span class="grad">{{ username }}</span></h1>
+    <p>كل التقييمات والواجبات في مكان واحد. ذاكر، شارك زمايلك، وخلي صحابك يذاكروا معاك!</p>
+    <div class="hero-actions">
+        <a class="btn btn-primary" href="{{ url_for('view_reviews') }}">{{ icon('file-text', 18) }} شوف التقييمات</a>
+        <a class="btn btn-success" href="{{ url_for('view_homeworks') }}">{{ icon('clipboard-list', 18) }} شوف الواجبات</a>
+        <button class="btn btn-ghost" id="shareBtn" type="button">{{ icon('share', 18) }} ابعت الموقع لصاحبك</button>
+    </div>
+</section>
+
+<section class="stats">
+    <div class="glass stat"><b>{{ stats.reviews }}</b><span>تقييم متاح</span></div>
+    <div class="glass stat"><b>{{ stats.homeworks }}</b><span>واجب متاح</span></div>
+    <div class="glass stat"><b>{{ stats.students }}</b><span>طالب مسجل</span></div>
+</section>
+
+<h2 class="section-title">{{ icon('book-open', 26) }} اختار مادتك</h2>
+<section class="subject-grid">
+    {% for s in subject_stats %}
+    <div class="glass subject-card" style="animation: rise .5s ease both; animation-delay: {{ loop.index0 * 70 }}ms">
+        <div class="icon">{{ icon(s.icon, 44) }}</div>
+        <h3>{{ s.name }}</h3>
+        <div class="subject-links">
+            <a href="{{ url_for('view_reviews', subject=s.name) }}">{{ icon('file-text', 16) }} {{ s.reviews }} تقييم</a>
+            <a href="{{ url_for('view_homeworks', subject=s.name) }}">{{ icon('clipboard-list', 16) }} {{ s.homeworks }} واجب</a>
+        </div>
+    </div>
+    {% endfor %}
+</section>
+
+<section class="two-col">
+    <div class="glass panel">
+        <h3>{{ icon('lightbulb', 22) }} حماس النهاردة</h3>
+        <div class="quote-text" id="quoteText"></div>
+        <div class="row"><button class="btn btn-ghost btn-sm" id="quoteBtn" type="button">{{ icon('refresh', 16) }} جملة تانية</button></div>
+    </div>
+
+    <div class="glass panel">
+        <h3>{{ icon('timer', 22) }} مؤقت المذاكرة</h3>
+        <div class="row">
+            <button class="chip active" data-min="25" type="button">مذاكرة 25</button>
+            <button class="chip" data-min="5" type="button">راحة 5</button>
+            <button class="chip" data-min="15" type="button">راحة طويلة 15</button>
+        </div>
+        <div class="timer-display" id="timerDisplay">25:00</div>
+        <div class="timer-status" id="timerStatus">ركّز وابدأ</div>
+        <div class="row">
+            <button class="btn btn-primary btn-sm" id="timerStart" type="button" data-sfx="none">{{ icon('play', 16) }} ابدأ</button>
+            <button class="btn btn-ghost btn-sm" id="timerReset" type="button">{{ icon('rotate-ccw', 16) }} إعادة</button>
+        </div>
+    </div>
+</section>
+
+<section class="glass panel students">
+    <h3>{{ icon('users', 22) }} الطلاب في المنصة <span class="count-badge">{{ students|length }}</span></h3>
+    <div class="search-box students-tools">
+        {{ icon('search', 18) }}
+        <input id="studentSearch" type="search" placeholder="دوّر على زميلك..." aria-label="بحث في الطلاب">
+    </div>
+    <ul class="student-list collapsed" id="studentList">
+        {% for s in students %}
+        <li class="student" data-name="{{ s.username|lower }}">
+            <img src="{{ s.profile_pic or url_for('static', filename='default-avatar.svg') }}"
+                 alt="" width="64" height="64" loading="lazy">
+            <div class="student-info">
+                <a class="student-name" href="{{ url_for('user_profile', user_id=s.id) }}" title="{{ s.username }}">{{ s.username }}</a>
+                {% if s.role == 'admin' %}<span class="admin-tag">{{ icon('crown', 14) }} أدمن</span>{% endif %}
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+    <p class="muted center" id="studentsEmpty" style="display:none">مفيش حد بالاسم ده.</p>
+    {% if students|length > 12 %}
+    <button class="btn btn-ghost btn-sm students-more" id="studentsMore" type="button" aria-expanded="false">عرض كل الطلاب ({{ students|length }})</button>
+    {% endif %}
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // ---- جمل تحفيزية ----
+    const quotes = [
+        "اللي بيذاكر النهاردة، بيرتاح بكرة.",
+        "خطوة صغيرة كل يوم أحسن من حماس ليلة الامتحان.",
+        "المذاكرة مع الصحاب بتخلي الصعب سهل.",
+        "متقولش مش قادر، قول لسه مذاكرتش كفاية.",
+        "كل واجب بتحله بيقربك من حلمك.",
+        "ركّز 25 دقيقة، ارتاح 5، وكرر. الاستمرار هو السر.",
+        "النجاح مجموع مجهودات صغيرة بتتعاد كل يوم."
+    ];
+    const quoteText = document.getElementById("quoteText");
+    let lastQuote = -1;
+    function showQuote() {
+        let i;
+        do { i = Math.floor(Math.random() * quotes.length); } while (i === lastQuote);
+        lastQuote = i;
+        quoteText.textContent = quotes[i];
+    }
+    document.getElementById("quoteBtn").addEventListener("click", showQuote);
+    showQuote();
+
+    // ---- مؤقت بومودورو ----
+    (function () {
+        const svg = (body) => '<svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + body + '</svg>';
+        const I_PLAY = svg('<polygon points="6 3 20 12 6 21 6 3"/>');
+        const I_PAUSE = svg('<rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/>');
+
+        const display = document.getElementById("timerDisplay");
+        const status = document.getElementById("timerStatus");
+        const startBtn = document.getElementById("timerStart");
+        const resetBtn = document.getElementById("timerReset");
+        const modes = [...document.querySelectorAll("[data-min]")];
+        let total = 25 * 60, left = total, timer = null;
+
+        function render() {
+            const m = String(Math.floor(left / 60)).padStart(2, "0");
+            const s = String(left % 60).padStart(2, "0");
+            display.textContent = m + ":" + s;
+        }
+        function stop() {
+            clearInterval(timer);
+            timer = null;
+            startBtn.innerHTML = I_PLAY + " ابدأ";
+        }
+        function tick() {
+            left--;
+            render();
+            if (left <= 0) {
+                stop();
+                status.textContent = "خلصت الجلسة! برافو عليك";
+                if (window.Sfx) Sfx.play("done");
+            }
+        }
+        startBtn.addEventListener("click", () => {
+            if (timer) {
+                stop();
+                status.textContent = "متوقف مؤقتًا";
+                if (window.Sfx) Sfx.play("pause");
+            } else {
+                if (left <= 0) left = total;
+                timer = setInterval(tick, 1000);
+                startBtn.innerHTML = I_PAUSE + " إيقاف";
+                status.textContent = "شغّال.. ركّز";
+                if (window.Sfx) Sfx.play("start");
+            }
+        });
+        resetBtn.addEventListener("click", () => {
+            stop();
+            left = total;
+            render();
+            status.textContent = "ركّز وابدأ";
+        });
+        modes.forEach((b) => b.addEventListener("click", () => {
+            modes.forEach((x) => x.classList.remove("active"));
+            b.classList.add("active");
+            total = parseInt(b.dataset.min, 10) * 60;
+            stop();
+            left = total;
+            render();
+            status.textContent = "ركّز وابدأ";
+        }));
+        render();
+    })();
+
+    // ---- قائمة الطلاب: بحث + عرض الكل ----
+    (function () {
+        const input = document.getElementById("studentSearch");
+        const list = document.getElementById("studentList");
+        const items = [...list.querySelectorAll(".student")];
+        const empty = document.getElementById("studentsEmpty");
+        const more = document.getElementById("studentsMore");
+        let expanded = false;
+
+        function setExpanded(v) {
+            expanded = v;
+            list.classList.toggle("collapsed", !v);
+            if (more) {
+                more.setAttribute("aria-expanded", String(v));
+                more.textContent = v ? "عرض أقل" : "عرض كل الطلاب (" + items.length + ")";
+            }
+        }
+        if (more) more.addEventListener("click", () => setExpanded(!expanded));
+
+        input.addEventListener("input", () => {
+            const q = input.value.trim().toLowerCase();
+            // وقت البحث بنعرض كل النتايج، ولما يتمسح بنرجع للحالة اللي كانت
+            list.classList.toggle("collapsed", !q && !expanded);
+            if (more) more.hidden = !!q;
+            let shown = 0;
+            items.forEach((li) => {
+                const ok = !q || li.dataset.name.includes(q);
+                li.style.display = ok ? "" : "none";
+                if (ok) shown++;
+            });
+            empty.style.display = shown ? "none" : "block";
+        });
+    })();
+</script>
+{% endblock %}

@@ -1,0 +1,16 @@
+[
+  {
+    "id": 1,
+    "user_id": 1,
+    "homework_name": "واجب",
+    "subject": "رياضيات",
+    "homework_link": "https://google.com"
+  },
+  {
+    "id": 2,
+    "user_id": 1,
+    "homework_name": "واجب",
+    "subject": "فلسفه",
+    "homework_link": "https://elearnningcontent.blob.core.windows.net/elearnningcontent/2026_2027/Secondry/Secondry1/Term1/ClassrHomeAssessmentsTest/philosophy_AR_Sec1_TR1_W1.pdf"
+  }
+]

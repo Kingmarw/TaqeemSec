@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}التقييمات{% endblock %}
+
+{% block content %}
+<div class="page-head">
+    <div>
+        <h1>{{ icon('file-text', 34) }} <span class="grad-text">التقييمات</span></h1>
+        <p class="muted">حمّل التقييمات وذاكرها أول بأول.</p>
+    </div>
+    <a class="btn btn-primary" href="{{ url_for('upload_review') }}">{{ icon('plus', 18) }} رفع تقييم</a>
+</div>
+
+{% if grouped_reviews %}
+<div class="toolbar">
+    <div class="search-box">
+        {{ icon('search', 18) }}
+        <input id="search" type="search" placeholder="ابحث عن تقييم...">
+    </div>
+    <div class="chips">
+        <button class="chip active" data-subject="" type="button">الكل</button>
+        {% for subject in grouped_reviews %}
+        <button class="chip" data-subject="{{ subject }}" type="button">{{ icon(SUBJECT_ICONS.get(subject, 'book'), 16) }} {{ subject }}</button>
+        {% endfor %}
+    </div>
+</div>
+
+{% for subject, reviews in grouped_reviews.items() %}
+<section class="group" data-subject="{{ subject }}">
+    <div class="group-head">
+        <h2>{{ icon(SUBJECT_ICONS.get(subject, 'book'), 26) }} {{ subject }}</h2>
+        <span class="count-badge">{{ reviews|length }}</span>
+    </div>
+    <div class="cards">
+        {% for review in reviews %}
+        <article class="glass item" data-title="{{ review.review_name }}" style="animation-delay: {{ loop.index0 * 60 }}ms">
+            <div class="item-top">
+                <div class="item-icon">{{ icon(SUBJECT_ICONS.get(subject, 'book'), 28) }}</div>
+                <div>
+                    <h3>{{ review.review_name }}</h3>
+                    <div class="by">{{ icon('user', 14) }} {{ review.author }}</div>
+                </div>
+            </div>
+            <div class="item-actions">
+                <a href="{{ review.review_link }}" class="btn btn-primary btn-sm" target="_blank" rel="noopener noreferrer">عرض التقييم</a>
+                {% if current_user.role == "admin" %}
+                <form action="{{ url_for('delete_review', review_id=review.id) }}" method="POST"
+                      onsubmit="return confirm('متأكد إنك عايز تحذف التقييم ده؟');">
+                    <button type="submit" class="btn btn-danger btn-sm">{{ icon('trash', 16) }} حذف</button>
+                </form>
+                {% endif %}
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+{% endfor %}
+
+<div class="empty" id="noResults" style="display:none">
+    <div class="big">{{ icon('search', 56) }}</div>
+    <h3>مفيش نتائج مطابقة</h3>
+    <p>جرب كلمة تانية أو اختار "الكل".</p>
+</div>
+
+{% else %}
+<div class="glass empty">
+    <div class="big">{{ icon('inbox', 56) }}</div>
+    <h3>لسه مفيش تقييمات</h3>
+    <p style="margin-bottom:16px">كن أول واحد يشارك تقييم مع زمايله!</p>
+    <a class="btn btn-primary" href="{{ url_for('upload_review') }}">{{ icon('plus', 18) }} ارفع أول تقييم</a>
+</div>
+{% endif %}
+{% endblock %}

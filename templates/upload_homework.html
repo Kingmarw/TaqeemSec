@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}رفع واجب جديد{% endblock %}
+
+{% block content %}
+<section class="glass form-card upload-page">
+    <h1 class="form-title">{{ icon('clipboard-list', 30) }} رفع واجب جديد</h1>
+    <p class="muted center">شارك الواجب برابط مباشر عشان زمايلك يستفيدوا منه.</p>
+
+    <form method="POST">
+        <div class="field">
+            <div class="label-row">
+                <label for="homework_name">اسم الواجب</label>
+                <span class="counter" id="name-count" aria-hidden="true">0 / 120</span>
+            </div>
+            <input type="text" id="homework_name" name="homework_name" maxlength="120"
+                   placeholder="مثال: واجب الدرس الرابع" autocomplete="off" required>
+        </div>
+
+        <fieldset class="field">
+            <legend>المادة</legend>
+            <div class="subject-picker" role="radiogroup">
+                {% for s in SUBJECTS %}
+                <label class="pick">
+                    <input type="radio" name="subject" value="{{ s.name }}" required>
+                    <span>{{ icon(s.icon, 18) }} {{ s.name }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </fieldset>
+
+        <div class="field">
+            <label for="homework_link">رابط الواجب</label>
+            <input type="url" id="homework_link" name="homework_link" dir="ltr"
+                   placeholder="https://Link.com/..." autocomplete="off"
+                   aria-describedby="link-hint" required>
+            <p class="hint" id="link-hint" data-state="idle">
+                {{ icon('info', 16) }}
+                <span id="link-hint-text">الرابط لازم يبدأ بـ https:// ويكون مفتوح لأي حد معاه اللينك.</span>
+            </p>
+        </div>
+
+        <button class="btn btn-success btn-block" type="submit">{{ icon('plus', 18) }} رفع الواجب</button>
+    </form>
+</section>
+
+<script>
+(function () {
+    var name = document.getElementById('homework_name');
+    var count = document.getElementById('name-count');
+    var link = document.getElementById('homework_link');
+    var hint = document.getElementById('link-hint');
+    var hintText = document.getElementById('link-hint-text');
+    var defaultText = hintText.textContent;
+
+    name.addEventListener('input', function () {
+        count.textContent = name.value.length + ' / ' + name.maxLength;
+    });
+
+    link.addEventListener('input', function () {
+        var v = link.value.trim();
+        if (!v) {
+            hint.dataset.state = 'idle';
+            hintText.textContent = defaultText;
+        } else if (/^https:\/\/\S+\.\S+/i.test(v)) {
+            hint.dataset.state = 'ok';
+            hintText.textContent = 'الرابط تمام. اتأكد إنه مفتوح لأي حد معاه اللينك.';
+        } else {
+            hint.dataset.state = 'warn';
+            hintText.textContent = 'الرابط لازم يبدأ بـ https:// ويكون كامل.';
+        }
+    });
+})();
+</script>
+{% endblock %}
