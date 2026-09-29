@@ -1,18 +1,1 @@
-[
-  {
-    "id": 1,
-    "username": "kingmarw@gmail.com",
-    "password": "$2b$12$N1oy7fPBwLuYxMr4l7tuY.QuiHaQ9EUqMglC2c.Zi6pl6.R0jMC/e",
-    "role": "user",
-    "profile_pic": "https://res.cloudinary.com/djlyxjsnv/image/upload/v1790711961/ahazmogl0uefptehlg9h.png",
-    "cover_pic": null
-  },
-  {
-    "id": 2,
-    "username": "محمود",
-    "password": "$2b$12$dpbFAmIj/roTqW6YwAN2Fu1I5Umo7cYv3eevRV64cF2MofEQ6.wBu",
-    "role": "admin",
-    "profile_pic": "https://res.cloudinary.com/djlyxjsnv/image/upload/v1790720137/z05hesr5sh3uufoc69ev.webp",
-    "cover_pic": "https://res.cloudinary.com/djlyxjsnv/image/upload/v1790719550/a4orthitxnu7ojbw09tl.webp"
-  }
-]
+
